@@ -261,6 +261,7 @@ export class ProviderService {
       provider: string;
     }> = [];
 
+    // Add all provider models
     this.providers.forEach((provider) => {
       provider.models.forEach((model) => {
         models.push({
@@ -277,6 +278,20 @@ export class ProviderService {
           provider: provider.name,
         });
       });
+    });
+
+    // Add model aliases
+    const modelAliases = this.configService.get<Record<string, string>>("modelAliases") || {};
+    Object.entries(modelAliases).forEach(([alias, target]) => {
+      if (target.includes(",")) {
+        const [provider, model] = target.split(",");
+        models.push({
+          id: alias,
+          object: "model",
+          owned_by: provider,
+          provider: provider,
+        });
+      }
     });
 
     return {

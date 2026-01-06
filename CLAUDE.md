@@ -4,12 +4,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Claude Code Router is a tool that routes Claude Code requests to different LLM providers. It uses a Monorepo architecture with four main packages:
+Claude Code Router is a tool that routes Claude Code requests to different LLM providers. It uses a Monorepo architecture with five main packages:
 
-- **cli** (`@musistudio/claude-code-router`): Command-line tool providing the `ccr` command
+- **core** (`@musistudio/llms`): Universal LLM API transformation server (provides request/response transformers)
+- **cli** (`@CCR/cli`): Command-line tool providing the `ccr` command
 - **server** (`@CCR/server`): Core server handling API routing and transformations
 - **shared** (`@CCR/shared`): Shared constants, utilities, and preset management
 - **ui** (`@CCR/ui`): Web management interface (React + Vite)
+- **docs** (`claude-code-router-docs`): Docusaurus-based documentation site
 
 ## Build Commands
 
@@ -20,21 +22,33 @@ pnpm build
 
 ### Build individual packages
 ```bash
+pnpm build:core     # Build Core (llms)
+pnpm build:shared   # Build Shared
 pnpm build:cli      # Build CLI
 pnpm build:server   # Build Server
 pnpm build:ui       # Build UI
+pnpm build:docs     # Build Documentation site
 ```
 
 ### Development mode
 ```bash
+pnpm dev:core       # Develop Core (nodemon)
 pnpm dev:cli        # Develop CLI (ts-node)
 pnpm dev:server     # Develop Server (ts-node)
 pnpm dev:ui         # Develop UI (Vite)
+pnpm dev:docs       # Develop Documentation site (Docusaurus)
+```
+
+### Documentation
+```bash
+pnpm serve:docs     # Serve built documentation
 ```
 
 ### Publish
 ```bash
 pnpm release        # Build and publish all packages
+pnpm release:npm    # Publish to npm only
+pnpm release:docker # Publish to Docker only
 ```
 
 ## Core Architecture
@@ -57,7 +71,7 @@ Token calculation uses `tiktoken` (cl100k_base) to estimate request size.
 
 ### 2. Transformer System
 
-The project uses the `@musistudio/llms` package (external dependency) to handle request/response transformations. Transformers adapt to different provider API differences:
+The project uses the `@musistudio/llms` package (packages/core) to handle request/response transformations. Transformers adapt to different provider API differences:
 
 - Built-in transformers: `anthropic`, `deepseek`, `gemini`, `openrouter`, `groq`, `maxtoken`, `tooluse`, `reasoning`, `enhancetool`, etc.
 - Custom transformers: Load external plugins via `transformers` array in `config.json`
@@ -226,19 +240,22 @@ Key files:
 
 ```
 cli → server → shared
-server → @musistudio/llms (core routing and transformation logic)
+server → core (@musistudio/llms - routing and transformation logic)
+core → shared
 ui (standalone frontend application)
+docs (standalone Docusaurus site)
 ```
 
 ## Development Notes
 
-1. **Node.js version**: Requires >= 18.0.0
-2. **Package manager**: Uses pnpm (monorepo depends on workspace protocol)
-3. **TypeScript**: All packages use TypeScript, but UI package is ESM module
+1. **Node.js version**: Requires >= 20.0.0
+2. **Package manager**: Uses pnpm >= 8.0.0 (monorepo depends on workspace protocol)
+3. **TypeScript**: All packages use TypeScript
 4. **Build tools**:
-   - cli/server/shared: esbuild
+   - core/cli/server/shared: esbuild
    - ui: Vite + TypeScript
-5. **@musistudio/llms**: This is an external dependency package providing the core server framework and transformer functionality, type definitions in `packages/server/src/types.d.ts`
+   - docs: Docusaurus
+5. **@musistudio/llms (core package)**: Internal package providing the core server framework and transformer functionality, type definitions in `packages/server/src/types.d.ts`
 6. **Code comments**: All comments in code MUST be written in English
 7. **Documentation**: When implementing new features, add documentation to the docs project instead of creating standalone md files
 

@@ -69,11 +69,11 @@ export const createServer = async (config: any): Promise<any> => {
       }
     } else {
       if (!model) {
-        req.log?.info(`No model specified, using default tiktoken`);
+        req.log?.debug(`No model specified, using default tiktoken`);
       } else if (!model.includes(",")) {
-        req.log?.info(`Model "${model}" does not contain comma, using default tiktoken`);
+        req.log?.debug(`Model "${model}" does not contain comma, using default tiktoken`);
       } else if (!tokenizerService) {
-        req.log?.warn(`TokenizerService not available, using default tiktoken`);
+        req.log?.debug(`TokenizerService not available, using default tiktoken`);
       }
     }
 

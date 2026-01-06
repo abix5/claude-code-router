@@ -122,6 +122,44 @@ async function mergeTransformers(
 }
 
 /**
+ * Merge model aliases configuration
+ */
+async function mergeModelAliases(
+  existing: Record<string, string>,
+  incoming: Record<string, string>,
+  strategy: MergeStrategy,
+  onAliasConflict?: (alias: string, existingValue: string, newValue: string) => Promise<boolean>
+): Promise<Record<string, string>> {
+  const result = { ...existing };
+
+  for (const [alias, value] of Object.entries(incoming)) {
+    if (value === undefined || value === null) {
+      continue;
+    }
+
+    const existingValue = result[alias];
+
+    if (existingValue === undefined || existingValue === null) {
+      // No such alias in existing config, add directly
+      result[alias] = value;
+    } else {
+      // Conflict exists
+      if (strategy === MergeStrategy.ASK && onAliasConflict) {
+        const shouldOverwrite = await onAliasConflict(alias, existingValue, value);
+        if (shouldOverwrite) {
+          result[alias] = value;
+        }
+      } else if (strategy === MergeStrategy.OVERWRITE) {
+        result[alias] = value;
+      }
+      // merge and skip strategies: keep existing value
+    }
+  }
+
+  return result;
+}
+
+/**
  * Merge other top-level configurations
  */
 async function mergeOtherConfig(
@@ -129,7 +167,7 @@ async function mergeOtherConfig(
   incoming: any,
   strategy: MergeStrategy,
   onConfigConflict?: (key: string) => Promise<boolean>,
-  excludeKeys: string[] = ['Providers', 'Router', 'transformers']
+  excludeKeys: string[] = ['Providers', 'Router', 'transformers', 'modelAliases']
 ): Promise<any> {
   const result = { ...existing };
 
@@ -170,6 +208,7 @@ async function mergeOtherConfig(
 export interface MergeCallbacks {
   onRouterConflict?: (key: string, existingValue: any, newValue: any) => Promise<boolean>;
   onTransformerConflict?: (transformerPath: string) => Promise<'keep' | 'overwrite' | 'skip'>;
+  onAliasConflict?: (alias: string, existingValue: string, newValue: string) => Promise<boolean>;
   onConfigConflict?: (key: string) => Promise<boolean>;
 }
 
@@ -214,6 +253,16 @@ export async function mergeConfig(
       presetConfig.transformers,
       strategy,
       callbacks?.onTransformerConflict
+    );
+  }
+
+  // Merge model aliases
+  if (presetConfig.modelAliases) {
+    result.modelAliases = await mergeModelAliases(
+      result.modelAliases || {},
+      presetConfig.modelAliases,
+      strategy,
+      callbacks?.onAliasConflict
     );
   }
 

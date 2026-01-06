@@ -149,16 +149,29 @@ async function getServer(options: RunOptions = {}) {
       if (config.LOG === undefined) {
         config.LOG = true;
       }
-      loggerConfig = {
-        level: config.LOG_LEVEL || "debug",
-        stream: createStream(generator, {
-          path: HOME_DIR,
-          maxFiles: 3,
-          interval: "1d",
-          compress: false,
-          maxSize: "50M"
-        }),
-      };
+
+      // Check if stdout logging is enabled (for Docker)
+      const useStdout = process.env.LOG_STDOUT === 'true' || config.LOG_STDOUT === true;
+
+      if (useStdout) {
+        // Output JSON logs to stdout for Docker containers
+        loggerConfig = {
+          level: config.LOG_LEVEL || "debug",
+          // No stream = stdout by default
+        };
+      } else {
+        // Output to rotating file (default)
+        loggerConfig = {
+          level: config.LOG_LEVEL || "debug",
+          stream: createStream(generator, {
+            path: HOME_DIR,
+            maxFiles: 3,
+            interval: "1d",
+            compress: false,
+            maxSize: "50M"
+          }),
+        };
+      }
     } else {
       loggerConfig = false;
     }

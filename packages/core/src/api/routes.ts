@@ -306,7 +306,17 @@ async function sendRequestToProvider(
   transformer: any,
   context: any
 ) {
-  const url = config.url || new URL(provider.baseUrl);
+  let url: URL;
+  if (config.url) {
+    url = config.url;
+  } else {
+    url = new URL(provider.baseUrl);
+    if (transformer.endPoint) {
+      // Append endPoint to the URL path
+      const currentPath = url.pathname.replace(/\/$/, ''); // Remove trailing slash
+      url.pathname = currentPath + transformer.endPoint;
+    }
+  }
 
   // Handle authentication in passthrough mode
   if (bypass && typeof transformer.auth === "function") {
@@ -349,6 +359,16 @@ async function sendRequestToProvider(
       delete requestHeaders[key];
     }
   }
+
+  // Log the final endpoint URL
+  const finalUrl = typeof url === "string" ? url : url.toString();
+  context.req.log.info({
+    msg: "Sending request to provider",
+    provider: provider.name,
+    model: requestBody.model,
+    endpoint: finalUrl,
+    transformer: transformer.name,
+  });
 
   const response = await sendUnifiedRequest(
     url,
@@ -472,6 +492,11 @@ export const registerApiRoutes = async (
 
   fastify.get("/health", async () => {
     return { status: "ok", timestamp: new Date().toISOString() };
+  });
+
+  // Models list endpoint for Claude Code
+  fastify.get("/v1/models", async () => {
+    return await fastify.providerService.getAvailableModels();
   });
 
   const transformersWithEndpoint =

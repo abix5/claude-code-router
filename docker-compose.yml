@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  ccr:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: claude-code-router
+    ports:
+      - "3456:3456"
+    volumes:
+      # Mount config directory from host
+      - ./data:/root/.claude-code-router
+    environment:
+      - NODE_ENV=production
+      - LOG_STDOUT=true
+    restart: unless-stopped
+    networks:
+      - ccr-network
+
+networks:
+  ccr-network:
+    driver: bridge

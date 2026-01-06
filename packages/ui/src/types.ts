@@ -53,6 +53,7 @@ export interface Config {
   Providers: Provider[];
   Router: RouterConfig;
   transformers: Transformer[];
+  modelAliases?: { [key: string]: string };
   StatusLine?: StatusLineConfig;
   forceUseImageAgent?: boolean;
   // Top-level settings

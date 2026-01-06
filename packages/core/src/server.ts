@@ -203,7 +203,7 @@ class Server {
         const url = new URL(`http://127.0.0.1${req.url}`);
         if (url.pathname.endsWith("/v1/messages") && req.body) {
           const body = req.body as any;
-          req.log.info({ data: body, type: "request body" });
+          req.log.debug({ data: body, type: "request body" });
           if (!body.stream) {
             body.stream = false;
           }

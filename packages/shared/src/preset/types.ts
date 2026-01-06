@@ -124,6 +124,11 @@ export interface TransformerConfig {
   [key: string]: any;
 }
 
+// Model alias configuration
+export interface ModelAliasConfig {
+  [aliasName: string]: string;  // "fast": "glm,glm-4.7"
+}
+
 // Preset metadata (flattened structure, for manifest.json)
 export interface PresetMetadata {
   name: string;                   // Preset name
@@ -145,6 +150,7 @@ export interface PresetConfigSection {
   Providers?: ProviderConfig[];
   Router?: RouterConfig;
   transformers?: TransformerConfig[];
+  modelAliases?: ModelAliasConfig;
   StatusLine?: any;
   NON_INTERACTIVE_MODE?: boolean;
 
